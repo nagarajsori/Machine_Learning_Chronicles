@@ -1,0 +1,37 @@
+# A simple RBM with 6 visible units and 3 hidden units using 1-step Contrastive Divergence
+
+import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+# Model config
+n_visible = 6
+n_hidden = 3
+np.random.seed(42)
+
+# Initialize weights and biases
+W = np.random.normal(0, 0.1, (n_visible, n_hidden))
+vb = np.zeros(n_visible)
+hb = np.zeros(n_hidden)
+
+# CD-1 training step
+def contrastive_divergence(v0):
+    # Positive phase
+    h_prob = sigmoid(np.dot(v0, W) + hb)
+    h_sample = (h_prob > np.random.rand(*h_prob.shape)).astype(float)
+
+    # Negative phase
+    v_prob = sigmoid(np.dot(h_sample, W.T) + vb)
+    v_sample = (v_prob > np.random.rand(*v_prob.shape)).astype(float)
+    h_recon = sigmoid(np.dot(v_sample, W) + hb)
+
+    # Weight updates
+    dW = np.outer(v0, h_prob) - np.outer(v_sample, h_recon)
+    return dW
+
+# Sample binary input vector
+v_input = np.array([1, 0, 1, 0, 1, 0])
+delta_W = contrastive_divergence(v_input)
+print("Weight update matrix from CD-1:")
+print(delta_W)
